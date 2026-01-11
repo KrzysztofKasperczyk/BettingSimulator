@@ -1,0 +1,11 @@
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\bin\Debug\net9.0\BettingSimulator.Domain.deps.json
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\bin\Debug\net9.0\BettingSimulator.Domain.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\bin\Debug\net9.0\BettingSimulator.Domain.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.AssemblyInfoInputs.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.AssemblyInfo.cs
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.csproj.CoreCompileInputs.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\refint\BettingSimulator.Domain.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\ref\BettingSimulator.Domain.dll

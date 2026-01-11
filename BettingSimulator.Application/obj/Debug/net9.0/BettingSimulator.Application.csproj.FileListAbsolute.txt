@@ -1,0 +1,15 @@
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\bin\Debug\net9.0\BettingSimulator.Application.deps.json
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\bin\Debug\net9.0\BettingSimulator.Application.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\bin\Debug\net9.0\BettingSimulator.Application.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\bin\Debug\net9.0\BettingSimulator.Domain.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\bin\Debug\net9.0\BettingSimulator.Domain.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.csproj.AssemblyReference.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.AssemblyInfoInputs.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.AssemblyInfo.cs
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.csproj.CoreCompileInputs.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingS.9C173533.Up2Date
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\refint\BettingSimulator.Application.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\ref\BettingSimulator.Application.dll

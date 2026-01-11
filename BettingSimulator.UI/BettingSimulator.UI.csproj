@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BettingSimulator.Application\BettingSimulator.Application.csproj" />
+    <ProjectReference Include="..\BettingSimulator.Domain\BettingSimulator.Domain.csproj" />
+    <ProjectReference Include="..\BettingSimulator.Infrastructure\BettingSimulator.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

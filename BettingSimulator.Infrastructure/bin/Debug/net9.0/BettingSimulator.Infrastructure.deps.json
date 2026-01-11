@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "BettingSimulator.Infrastructure/1.0.0": {
+        "dependencies": {
+          "BettingSimulator.Application": "1.0.0",
+          "BettingSimulator.Domain": "1.0.0"
+        },
+        "runtime": {
+          "BettingSimulator.Infrastructure.dll": {}
+        }
+      },
+      "BettingSimulator.Application/1.0.0": {
+        "dependencies": {
+          "BettingSimulator.Domain": "1.0.0"
+        },
+        "runtime": {
+          "BettingSimulator.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "BettingSimulator.Domain/1.0.0": {
+        "runtime": {
+          "BettingSimulator.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BettingSimulator.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BettingSimulator.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BettingSimulator.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

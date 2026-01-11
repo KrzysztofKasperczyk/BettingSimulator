@@ -1,0 +1,17 @@
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\bin\Debug\net9.0\BettingSimulator.Infrastructure.deps.json
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\bin\Debug\net9.0\BettingSimulator.Infrastructure.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\bin\Debug\net9.0\BettingSimulator.Infrastructure.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\bin\Debug\net9.0\BettingSimulator.Application.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\bin\Debug\net9.0\BettingSimulator.Domain.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\bin\Debug\net9.0\BettingSimulator.Application.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\bin\Debug\net9.0\BettingSimulator.Domain.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.csproj.AssemblyReference.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.AssemblyInfoInputs.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.AssemblyInfo.cs
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.csproj.CoreCompileInputs.cache
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingS.F3A4343F.Up2Date
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\refint\BettingSimulator.Infrastructure.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.pdb
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\ref\BettingSimulator.Infrastructure.dll

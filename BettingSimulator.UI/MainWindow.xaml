@@ -1,0 +1,88 @@
+﻿<Window x:Class="BettingSimulator.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Betting Simulator" Height="520" Width="900">
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top bar -->
+        <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock Text="Saldo:" FontWeight="Bold" Margin="0,0,6,0"/>
+            <TextBlock Text="{Binding Balance, Mode=OneWay, StringFormat={}{0:0.00} PLN}" Margin="0,0,16,0"/>
+
+            <Button Content="Doładuj 100 PLN" Width="130"
+                    Command="{Binding Deposit100Command}" Margin="0,0,16,0"/>
+
+            <TextBlock Text="Stawka:" FontWeight="Bold" Margin="0,0,6,0"/>
+            <TextBox Width="90"
+                     Text="{Binding StakeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,10,0"/>
+
+            <Button Content="Postaw zakład" Width="120"
+                    Command="{Binding PlaceBetCommand}"/>
+        </StackPanel>
+
+        <!-- Left: Events -->
+        <GroupBox Grid.Row="1" Grid.Column="0" Header="Wydarzenia" Margin="0,10,10,10">
+            <ListBox ItemsSource="{Binding Events, Mode=OneWay}"
+                     SelectedItem="{Binding SelectedEvent, Mode=TwoWay}"
+                     DisplayMemberPath="Name"/>
+        </GroupBox>
+
+        <!-- Right: Market + selections -->
+        <Grid Grid.Row="1" Grid.Column="1" Margin="0,10,0,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+                <TextBlock Text="{Binding SelectedEvent.Name, Mode=OneWay}"
+                           FontSize="16" FontWeight="Bold"/>
+
+                <TextBlock>
+                    <Run Text="Start: "/>
+                    <Run Text="{Binding SelectedEvent.StartTime, Mode=OneWay, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
+                </TextBlock>
+
+                <TextBlock Margin="0,2,0,0">
+                    <Run Text="Wynik: "/>
+                    <Run Text="{Binding SelectedEvent.Score, Mode=OneWay}"/>
+                    <Run Text="  |  Stan: "/>
+                    <Run Text="{Binding SelectedEvent.State, Mode=OneWay}"/>
+                </TextBlock>
+
+                <ComboBox Margin="0,8,0,0"
+                          ItemsSource="{Binding SelectedEvent.Markets, Mode=OneWay}"
+                          SelectedItem="{Binding SelectedMarket, Mode=TwoWay}"
+                          DisplayMemberPath="Name"/>
+            </StackPanel>
+
+            <GroupBox Grid.Row="1" Header="Opcje zakładu" Margin="0,10,0,0">
+                <ListView ItemsSource="{Binding Selections, Mode=OneWay}"
+                          SelectedItem="{Binding SelectedSelection, Mode=TwoWay}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Kod" DisplayMemberBinding="{Binding Code}" Width="70"/>
+                            <GridViewColumn Header="Nazwa" DisplayMemberBinding="{Binding Name}" Width="240"/>
+                            <GridViewColumn Header="Kurs" DisplayMemberBinding="{Binding CurrentOdds}" Width="80"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+        </Grid>
+
+        <!-- Bottom message -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#11000000" Padding="10">
+            <TextBlock Text="{Binding Message, Mode=OneWay}" TextWrapping="Wrap"/>
+        </Border>
+    </Grid>
+</Window>
