@@ -9,3 +9,4 @@ D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\Betting
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\refint\BettingSimulator.Domain.dll
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.pdb
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\ref\BettingSimulator.Domain.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Domain\obj\Debug\net9.0\BettingSimulator.Domain.sourcelink.json

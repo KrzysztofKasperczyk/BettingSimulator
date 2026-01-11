@@ -15,3 +15,4 @@ D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\refint\BettingSimulator.Infrastructure.dll
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.pdb
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\ref\BettingSimulator.Infrastructure.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Infrastructure\obj\Debug\net9.0\BettingSimulator.Infrastructure.sourcelink.json

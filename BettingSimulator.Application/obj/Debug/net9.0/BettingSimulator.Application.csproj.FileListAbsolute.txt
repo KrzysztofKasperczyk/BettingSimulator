@@ -13,3 +13,4 @@ D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\Be
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\refint\BettingSimulator.Application.dll
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.pdb
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\ref\BettingSimulator.Application.dll
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.Application\obj\Debug\net9.0\BettingSimulator.Application.sourcelink.json

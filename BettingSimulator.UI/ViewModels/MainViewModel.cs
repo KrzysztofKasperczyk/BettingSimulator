@@ -10,12 +10,15 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace BettingSimulator.UI.ViewModels
 {
     public sealed class MainViewModel : ViewModelBase
     {
         private readonly DemoBootstrapper _bootstrapper;
+        private readonly DispatcherTimer _timer;
+        private int _tickCounter = 0;
 
         public ObservableCollection<SportEvent> Events { get; } = new();
 
@@ -27,9 +30,14 @@ namespace BettingSimulator.UI.ViewModels
             {
                 _selectedEvent = value;
                 OnPropertyChanged();
+
                 SelectedMarket = _selectedEvent?.Markets.FirstOrDefault();
+
+                // RefreshSelections wywoła się też w setterze SelectedMarket,
+                // ale wolę mieć to deterministyczne (bez zależności od kolejności).
                 RefreshSelections();
-                ((RelayCommand)PlaceBetCommand).RaiseCanExecuteChanged();
+
+                PlaceBetCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -41,8 +49,10 @@ namespace BettingSimulator.UI.ViewModels
             {
                 _selectedMarket = value;
                 OnPropertyChanged();
+
                 RefreshSelections();
-                ((RelayCommand)PlaceBetCommand).RaiseCanExecuteChanged();
+
+                PlaceBetCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -56,7 +66,8 @@ namespace BettingSimulator.UI.ViewModels
             {
                 _selectedSelection = value;
                 OnPropertyChanged();
-                ((RelayCommand)PlaceBetCommand).RaiseCanExecuteChanged();
+
+                PlaceBetCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -68,7 +79,8 @@ namespace BettingSimulator.UI.ViewModels
             {
                 _stakeText = value;
                 OnPropertyChanged();
-                ((RelayCommand)PlaceBetCommand).RaiseCanExecuteChanged();
+
+                PlaceBetCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -86,6 +98,8 @@ namespace BettingSimulator.UI.ViewModels
             set { _balance = value; OnPropertyChanged(); }
         }
 
+        public string SimTimeText => _bootstrapper.Clock.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
         // Demo user (na razie 1 użytkownik)
         public Guid UserId { get; } = Guid.Parse("11111111-1111-1111-1111-111111111111");
         public string UserName { get; } = "Demo User";
@@ -97,19 +111,50 @@ namespace BettingSimulator.UI.ViewModels
         {
             _bootstrapper = new DemoBootstrapper();
 
-            // 1) Najpierw komendy (żeby setter SelectedEvent mógł je bezpiecznie wywoływać)
+            // Komendy najpierw (żeby RaiseCanExecuteChanged zawsze było bezpieczne)
             Deposit100Command = new RelayCommand(Deposit100);
             PlaceBetCommand = new RelayCommand(PlaceBet, CanPlaceBet);
 
-            // 2) Wczytaj eventy
+            // Eventy do UI
             foreach (var ev in _bootstrapper.EventRepository.GetAll())
                 Events.Add(ev);
 
-            // 3) Ustaw domyślny wybór (to wywoła setter i RaiseCanExecuteChanged)
             SelectedEvent = Events.FirstOrDefault();
 
-            // 4) startowe saldo
             RefreshBalance();
+            OnPropertyChanged(nameof(SimTimeText));
+
+            // Timer ticków symulacji
+            _timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(500)
+            };
+            _timer.Tick += (_, _) => OnTick();
+            _timer.Start();
+        }
+
+        private void OnTick()
+        {
+            try
+            {
+                // 1 tick = 5 sekund czasu symulacji
+                _bootstrapper.TickClock.Advance(TimeSpan.FromSeconds(5));
+
+                // logika symulacji: start/live/finish + score + kursy
+                _bootstrapper.TickSimulationUseCase.Execute();
+
+                // 🔴 KLUCZOWE: wymuszenie odświeżenia SelectedEvent w UI
+                var tmp = SelectedEvent;
+                SelectedEvent = tmp;
+
+                // odśwież tekst czasu symulacji
+                OnPropertyChanged(nameof(SimTimeText));
+            }
+            catch (Exception ex)
+            {
+                _timer.Stop();
+                Message = $"Błąd symulacji: {ex.Message}";
+            }
         }
 
         private void RefreshSelections()
@@ -117,7 +162,8 @@ namespace BettingSimulator.UI.ViewModels
             Selections.Clear();
             SelectedSelection = null;
 
-            if (SelectedMarket is null) return;
+            if (SelectedMarket is null)
+                return;
 
             foreach (var s in SelectedMarket.Selections)
                 Selections.Add(s);
@@ -130,7 +176,11 @@ namespace BettingSimulator.UI.ViewModels
             try
             {
                 var wallet = _bootstrapper.WalletRepository.GetOrCreate(UserId, UserName);
-                wallet.Deposit(new BettingSimulator.Domain.Common.Money(100m, "PLN"), _bootstrapper.Clock.Now, "Initial top-up");
+                wallet.Deposit(
+                    new BettingSimulator.Domain.Common.Money(100m, "PLN"),
+                    _bootstrapper.Clock.Now,
+                    "Initial top-up"
+                );
                 _bootstrapper.WalletRepository.Update(wallet);
 
                 RefreshBalance();
@@ -150,7 +200,12 @@ namespace BettingSimulator.UI.ViewModels
             if (string.IsNullOrWhiteSpace(StakeText))
                 return false;
 
-            return decimal.TryParse(StakeText, NumberStyles.Number, CultureInfo.InvariantCulture, out var stake) && stake > 0m;
+            return decimal.TryParse(
+                StakeText,
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out var stake
+            ) && stake > 0m;
         }
 
         private void PlaceBet()
@@ -160,7 +215,6 @@ namespace BettingSimulator.UI.ViewModels
                 if (SelectedEvent is null || SelectedMarket is null || SelectedSelection is null)
                     return;
 
-                // parsing stake (w UI używamy kropki)
                 if (!decimal.TryParse(StakeText, NumberStyles.Number, CultureInfo.InvariantCulture, out var stakeAmount))
                 {
                     Message = "Niepoprawna stawka (użyj np. 10.00).";
@@ -198,5 +252,6 @@ namespace BettingSimulator.UI.ViewModels
             Balance = wallet.GetBalance("PLN").Amount;
         }
     }
-
 }
+
+

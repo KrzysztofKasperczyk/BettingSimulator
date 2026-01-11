@@ -10,14 +10,15 @@ namespace BettingSimulator.Infrastructure.Demo
 {
     public static class DemoDataSeeder
     {
-        public static SportEvent CreateSingleDemoEvent(DateTime now)
+        public static BettingSimulator.Domain.Events.SportEvent CreateSingleDemoEvent(DateTime now)
         {
-            // Start za 2 minuty (symulacja czasu dojdzie później)
-            var ev = new SportEvent(
+            // Start za 2 minuty, trwa 10 minut (symulowanych)
+            var ev = new BettingSimulator.Domain.Events.SportEvent(
                 name: "Lions vs Tigers",
-                startTime: now.AddMinutes(2));
+                startTime: now.AddMinutes(2),
+                plannedDuration: TimeSpan.FromMinutes(10)
+            );
 
-            // Rynek 1X2
             var home = new Selection("HOME", "Home Win", new BettingSimulator.Domain.Common.Odds(2.10m));
             var draw = new Selection("DRAW", "Draw", new BettingSimulator.Domain.Common.Odds(3.30m));
             var away = new Selection("AWAY", "Away Win", new BettingSimulator.Domain.Common.Odds(3.60m));
@@ -28,8 +29,8 @@ namespace BettingSimulator.Infrastructure.Demo
                 selections: new[] { home, draw, away });
 
             ev.AddMarket(market);
-
             return ev;
         }
     }
+
 }

@@ -12,40 +12,50 @@ namespace BettingSimulator.Domain.Events
     {
         public string Name { get; }
         public DateTime StartTime { get; }
-        public EventState State { get; private set; }
+        public TimeSpan PlannedDuration { get; }              // NOWE
+        public DateTime PlannedEndTime => StartTime + PlannedDuration;  // NOWE
 
+        public EventState State { get; private set; }
         public Score Score { get; private set; }
+
+        public DateTime? LiveStartedAt { get; private set; }
+        public DateTime? FinishedAt { get; private set; }
 
         public IReadOnlyList<Market> Markets => _markets;
         private readonly List<Market> _markets = new();
 
-        public SportEvent(string name, DateTime startTime, Guid? id = null) : base(id)
+        public SportEvent(string name, DateTime startTime, TimeSpan plannedDuration, Guid? id = null) : base(id)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new DomainException("Event name cannot be empty.");
+            if (plannedDuration <= TimeSpan.Zero)
+                throw new DomainException("PlannedDuration must be greater than zero.");
 
             Name = name.Trim();
             StartTime = startTime;
+            PlannedDuration = plannedDuration;
+
             State = EventState.Scheduled;
             Score = new Score(0, 0);
         }
 
-        public void Start()
+        public void StartAt(DateTime startedAt)
         {
             if (State != EventState.Scheduled)
                 throw new DomainException("Only scheduled events can be started.");
 
             State = EventState.Live;
+            LiveStartedAt = startedAt;
         }
 
-        public void Finish()
+        public void FinishAt(DateTime finishedAt)
         {
             if (State != EventState.Live)
                 throw new DomainException("Only live events can be finished.");
 
             State = EventState.Finished;
+            FinishedAt = finishedAt;
 
-            // Po zakończeniu wydarzenia zamykamy rynki (rozliczenie będzie w Application)
             foreach (var market in _markets)
             {
                 if (market.State is MarketState.Open or MarketState.Suspended)
@@ -66,5 +76,4 @@ namespace BettingSimulator.Domain.Events
             _markets.Add(market);
         }
     }
-
 }
