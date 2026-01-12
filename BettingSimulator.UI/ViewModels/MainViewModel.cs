@@ -22,6 +22,9 @@ namespace BettingSimulator.UI.ViewModels
 
         public ObservableCollection<SportEvent> Events { get; } = new();
 
+        public ObservableCollection<BetListItemViewModel> UserBets { get; } = new();
+
+
         private SportEvent? _selectedEvent;
         public SportEvent? SelectedEvent
         {
@@ -122,6 +125,7 @@ namespace BettingSimulator.UI.ViewModels
             SelectedEvent = Events.FirstOrDefault();
 
             RefreshBalance();
+            RefreshUserBets();
             OnPropertyChanged(nameof(SimTimeText));
 
             // Timer ticków symulacji
@@ -143,17 +147,21 @@ namespace BettingSimulator.UI.ViewModels
                 // logika symulacji
                 _bootstrapper.TickSimulationUseCase.Execute();
 
+                // ODŚWIEŻ LISTĘ EVENTÓW (żeby zadziałały kolory w lewym panelu)
+                RefreshEventsPreserveSelection();
+
                 // jeśli event się zakończył, rozlicz zakłady
                 if (SelectedEvent is not null &&
                     SelectedEvent.State == BettingSimulator.Domain.Events.EventState.Finished)
                 {
                     _bootstrapper.SettleEventUseCase.Execute(SelectedEvent.Id);
                     RefreshBalance();
+                    RefreshUserBets();
                 }
 
                 // Odśwież czas
                 OnPropertyChanged(nameof(SimTimeText));
-
+                
                 // Wymuś odświeżenie panelu szczegółów (State/Score)
                 OnPropertyChanged(nameof(SelectedEvent));
 
@@ -181,6 +189,55 @@ namespace BettingSimulator.UI.ViewModels
 
             SelectedSelection = Selections.FirstOrDefault();
         }
+
+        private void RefreshUserBets()
+        {
+            UserBets.Clear();
+
+            var bets = _bootstrapper.BetRepository.GetByUserId(UserId);
+
+            foreach (var bet in bets.OrderByDescending(b => b.PlacedAt ?? b.CreatedAt))
+            {
+                var leg = bet.Legs.FirstOrDefault();
+                if (leg is null) continue;
+
+                var ev = _bootstrapper.EventRepository.GetById(leg.EventId);
+                var eventName = ev?.Name ?? leg.EventId.ToString();
+
+                var combinedOdds = bet.GetCombinedOdds().Value;
+                var potential = bet.GetPotentialPayout().Amount;
+
+                UserBets.Add(new BetListItemViewModel
+                {
+                    BetSlipId = bet.Id,
+                    EventName = eventName,
+                    SelectionCode = leg.SelectionCode,
+                    Odds = combinedOdds,
+                    Stake = bet.Stake.Amount,
+                    PotentialPayout = potential,
+                    Status = bet.Status.ToString(),
+                    PlacedAt = bet.PlacedAt ?? bet.CreatedAt
+                });
+            }
+        }
+
+        private void RefreshEventsPreserveSelection()
+        {
+            var selectedId = SelectedEvent?.Id;
+
+            var all = _bootstrapper.EventRepository.GetAll();
+
+            Events.Clear();
+            foreach (var ev in all)
+                Events.Add(ev);
+
+            if (selectedId.HasValue)
+                SelectedEvent = Events.FirstOrDefault(e => e.Id == selectedId.Value) ?? Events.FirstOrDefault();
+            else
+                SelectedEvent = Events.FirstOrDefault();
+        }
+
+
 
         private void Deposit100()
         {
@@ -271,6 +328,8 @@ namespace BettingSimulator.UI.ViewModels
                     $"POSTAWIONO ✅  Kurs: {result.OddsAtPlacement:0.00} | " +
                     $"Potencjalna wygrana: {result.PotentialPayout:0.00} PLN | " +
                     $"Saldo: {result.NewBalance:0.00} PLN";
+
+                RefreshUserBets();
             }
             catch (Exception ex)
             {
