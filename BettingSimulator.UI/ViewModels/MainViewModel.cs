@@ -140,15 +140,25 @@ namespace BettingSimulator.UI.ViewModels
                 // 1 tick = 5 sekund czasu symulacji
                 _bootstrapper.TickClock.Advance(TimeSpan.FromSeconds(5));
 
-                // logika symulacji: start/live/finish + score + kursy
+                // logika symulacji
                 _bootstrapper.TickSimulationUseCase.Execute();
 
-                // 🔴 KLUCZOWE: wymuszenie odświeżenia SelectedEvent w UI
-                var tmp = SelectedEvent;
-                SelectedEvent = tmp;
+                // jeśli event się zakończył, rozlicz zakłady
+                if (SelectedEvent is not null &&
+                    SelectedEvent.State == BettingSimulator.Domain.Events.EventState.Finished)
+                {
+                    _bootstrapper.SettleEventUseCase.Execute(SelectedEvent.Id);
+                    RefreshBalance();
+                }
 
-                // odśwież tekst czasu symulacji
+                // Odśwież czas
                 OnPropertyChanged(nameof(SimTimeText));
+
+                // Wymuś odświeżenie panelu szczegółów (State/Score)
+                OnPropertyChanged(nameof(SelectedEvent));
+
+                // Odśwież kursy w tabeli, ale NIE resetuj wyboru
+                RefreshSelectionsPreserveSelection();
             }
             catch (Exception ex)
             {
@@ -156,6 +166,7 @@ namespace BettingSimulator.UI.ViewModels
                 Message = $"Błąd symulacji: {ex.Message}";
             }
         }
+
 
         private void RefreshSelections()
         {
@@ -191,6 +202,27 @@ namespace BettingSimulator.UI.ViewModels
                 Message = $"Błąd: {ex.Message}";
             }
         }
+
+        private void RefreshSelectionsPreserveSelection()
+        {
+            var previouslySelectedCode = SelectedSelection?.Code;
+
+            Selections.Clear();
+
+            if (SelectedMarket is null)
+                return;
+
+            foreach (var s in SelectedMarket.Selections)
+                Selections.Add(s);
+
+            // Przywróć wybór jeśli nadal istnieje
+            if (!string.IsNullOrWhiteSpace(previouslySelectedCode))
+                SelectedSelection = Selections.FirstOrDefault(s => s.Code == previouslySelectedCode);
+
+            // Jeśli nie było poprzedniego wyboru albo zniknął – wybierz pierwszy
+            SelectedSelection ??= Selections.FirstOrDefault();
+        }
+
 
         private bool CanPlaceBet()
         {

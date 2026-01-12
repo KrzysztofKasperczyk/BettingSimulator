@@ -23,6 +23,7 @@ namespace BettingSimulator.Infrastructure.Demo
 
         public PlaceBetUseCase PlaceBetUseCase { get; }
         public TickSimulationUseCase TickSimulationUseCase { get; }
+        public SettleEventUseCase SettleEventUseCase { get; } // NEW
 
         public DemoBootstrapper()
         {
@@ -35,8 +36,13 @@ namespace BettingSimulator.Infrastructure.Demo
             var oddsCalculator = new LeadBasedOddsCalculator();
             var oddsService = new OddsService(oddsCalculator);
 
+            var settlementService = new SettlementService();
+
             PlaceBetUseCase = new PlaceBetUseCase(EventRepository, BetRepository, WalletRepository, TickClock);
             TickSimulationUseCase = new TickSimulationUseCase(EventRepository, TickClock, oddsService);
+
+            SettleEventUseCase = new SettleEventUseCase(
+                EventRepository, BetRepository, WalletRepository, settlementService, TickClock);
 
             Seed();
         }
