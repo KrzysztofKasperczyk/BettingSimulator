@@ -4,12 +4,9 @@ using BettingSimulator.Domain.Markets;
 using BettingSimulator.Infrastructure.Demo;
 using BettingSimulator.UI.Commands;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace BettingSimulator.UI.ViewModels
@@ -18,12 +15,26 @@ namespace BettingSimulator.UI.ViewModels
     {
         private readonly DemoBootstrapper _bootstrapper;
         private readonly DispatcherTimer _timer;
-        private int _tickCounter = 0;
 
-        public ObservableCollection<SportEvent> Events { get; } = new();
+        // Lista po lewej (VM-y tylko do listy, żeby kolory działały bez migania)
+        public ObservableCollection<EventListItemViewModel> EventItems { get; } = new();
 
+        private EventListItemViewModel? _selectedEventItem;
+        public EventListItemViewModel? SelectedEventItem
+        {
+            get => _selectedEventItem;
+            set
+            {
+                _selectedEventItem = value;
+                OnPropertyChanged();
+
+                // Napędza prawą stronę
+                SelectedEvent = _selectedEventItem?.Event;
+            }
+        }
+
+        // Historia zakładów
         public ObservableCollection<BetListItemViewModel> UserBets { get; } = new();
-
 
         private SportEvent? _selectedEvent;
         public SportEvent? SelectedEvent
@@ -34,11 +45,16 @@ namespace BettingSimulator.UI.ViewModels
                 _selectedEvent = value;
                 OnPropertyChanged();
 
-                SelectedMarket = _selectedEvent?.Markets.FirstOrDefault();
+                // Uwaga: tu nie zmieniamy SelectedMarket, jeśli już był ustawiony i nadal pasuje.
+                // Dzięki temu nie resetujemy użytkownikowi wyborów przy drobnych odświeżeniach.
+                if (_selectedEvent is null)
+                {
+                    SelectedMarket = null;
+                    return;
+                }
 
-                // RefreshSelections wywoła się też w setterze SelectedMarket,
-                // ale wolę mieć to deterministyczne (bez zależności od kolejności).
-                RefreshSelections();
+                if (SelectedMarket is null || !_selectedEvent.Markets.Any(m => m.Id == SelectedMarket.Id))
+                    SelectedMarket = _selectedEvent.Markets.FirstOrDefault();
 
                 PlaceBetCommand.RaiseCanExecuteChanged();
             }
@@ -53,7 +69,7 @@ namespace BettingSimulator.UI.ViewModels
                 _selectedMarket = value;
                 OnPropertyChanged();
 
-                RefreshSelections();
+                RefreshSelectionsPreserveSelection();
 
                 PlaceBetCommand.RaiseCanExecuteChanged();
             }
@@ -114,21 +130,19 @@ namespace BettingSimulator.UI.ViewModels
         {
             _bootstrapper = new DemoBootstrapper();
 
-            // Komendy najpierw (żeby RaiseCanExecuteChanged zawsze było bezpieczne)
             Deposit100Command = new RelayCommand(Deposit100);
             PlaceBetCommand = new RelayCommand(PlaceBet, CanPlaceBet);
 
-            // Eventy do UI
+            // Załaduj eventy do listy po lewej
             foreach (var ev in _bootstrapper.EventRepository.GetAll())
-                Events.Add(ev);
+                EventItems.Add(new EventListItemViewModel(ev));
 
-            SelectedEvent = Events.FirstOrDefault();
+            SelectedEventItem = EventItems.FirstOrDefault();
 
             RefreshBalance();
             RefreshUserBets();
             OnPropertyChanged(nameof(SimTimeText));
 
-            // Timer ticków symulacji
             _timer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(500)
@@ -147,25 +161,26 @@ namespace BettingSimulator.UI.ViewModels
                 // logika symulacji
                 _bootstrapper.TickSimulationUseCase.Execute();
 
-                // ODŚWIEŻ LISTĘ EVENTÓW (żeby zadziałały kolory w lewym panelu)
-                RefreshEventsPreserveSelection();
+                // ✅ odśwież statusy eventów na liście po lewej (bez migania)
+                foreach (var item in EventItems)
+                    item.SyncFromDomain();
 
-                // jeśli event się zakończył, rozlicz zakłady
+                // settlement (MVP: może się wywołać wiele razy, ale jest bezpieczne)
                 if (SelectedEvent is not null &&
-                    SelectedEvent.State == BettingSimulator.Domain.Events.EventState.Finished)
+                    SelectedEvent.State == EventState.Finished)
                 {
                     _bootstrapper.SettleEventUseCase.Execute(SelectedEvent.Id);
                     RefreshBalance();
                     RefreshUserBets();
                 }
 
-                // Odśwież czas
+                // czas w UI
                 OnPropertyChanged(nameof(SimTimeText));
-                
-                // Wymuś odświeżenie panelu szczegółów (State/Score)
+
+                // odśwież szczegóły po prawej (State/Score/itd.)
                 OnPropertyChanged(nameof(SelectedEvent));
 
-                // Odśwież kursy w tabeli, ale NIE resetuj wyboru
+                // odśwież kursy w tabeli, ale zachowaj klikniętą selekcję
                 RefreshSelectionsPreserveSelection();
             }
             catch (Exception ex)
@@ -175,69 +190,24 @@ namespace BettingSimulator.UI.ViewModels
             }
         }
 
-
-        private void RefreshSelections()
+        private void RefreshSelectionsPreserveSelection()
         {
-            Selections.Clear();
-            SelectedSelection = null;
+            var previouslySelectedCode = SelectedSelection?.Code;
 
+            Selections.Clear();
             if (SelectedMarket is null)
                 return;
 
             foreach (var s in SelectedMarket.Selections)
                 Selections.Add(s);
 
-            SelectedSelection = Selections.FirstOrDefault();
+            // Przywróć wybór jeśli nadal istnieje
+            if (!string.IsNullOrWhiteSpace(previouslySelectedCode))
+                SelectedSelection = Selections.FirstOrDefault(s => s.Code == previouslySelectedCode);
+
+            // Jeśli nie było poprzedniego wyboru albo zniknął – wybierz pierwszy
+            SelectedSelection ??= Selections.FirstOrDefault();
         }
-
-        private void RefreshUserBets()
-        {
-            UserBets.Clear();
-
-            var bets = _bootstrapper.BetRepository.GetByUserId(UserId);
-
-            foreach (var bet in bets.OrderByDescending(b => b.PlacedAt ?? b.CreatedAt))
-            {
-                var leg = bet.Legs.FirstOrDefault();
-                if (leg is null) continue;
-
-                var ev = _bootstrapper.EventRepository.GetById(leg.EventId);
-                var eventName = ev?.Name ?? leg.EventId.ToString();
-
-                var combinedOdds = bet.GetCombinedOdds().Value;
-                var potential = bet.GetPotentialPayout().Amount;
-
-                UserBets.Add(new BetListItemViewModel
-                {
-                    BetSlipId = bet.Id,
-                    EventName = eventName,
-                    SelectionCode = leg.SelectionCode,
-                    Odds = combinedOdds,
-                    Stake = bet.Stake.Amount,
-                    PotentialPayout = potential,
-                    Status = bet.Status.ToString(),
-                    PlacedAt = bet.PlacedAt ?? bet.CreatedAt
-                });
-            }
-        }
-
-        private void RefreshEventsPreserveSelection()
-        {
-            var selectedId = SelectedEvent?.Id;
-
-            var all = _bootstrapper.EventRepository.GetAll();
-
-            Events.Clear();
-            foreach (var ev in all)
-                Events.Add(ev);
-
-            if (selectedId.HasValue)
-                SelectedEvent = Events.FirstOrDefault(e => e.Id == selectedId.Value) ?? Events.FirstOrDefault();
-            else
-                SelectedEvent = Events.FirstOrDefault();
-        }
-
-
 
         private void Deposit100()
         {
@@ -259,27 +229,6 @@ namespace BettingSimulator.UI.ViewModels
                 Message = $"Błąd: {ex.Message}";
             }
         }
-
-        private void RefreshSelectionsPreserveSelection()
-        {
-            var previouslySelectedCode = SelectedSelection?.Code;
-
-            Selections.Clear();
-
-            if (SelectedMarket is null)
-                return;
-
-            foreach (var s in SelectedMarket.Selections)
-                Selections.Add(s);
-
-            // Przywróć wybór jeśli nadal istnieje
-            if (!string.IsNullOrWhiteSpace(previouslySelectedCode))
-                SelectedSelection = Selections.FirstOrDefault(s => s.Code == previouslySelectedCode);
-
-            // Jeśli nie było poprzedniego wyboru albo zniknął – wybierz pierwszy
-            SelectedSelection ??= Selections.FirstOrDefault();
-        }
-
 
         private bool CanPlaceBet()
         {
@@ -337,6 +286,37 @@ namespace BettingSimulator.UI.ViewModels
             }
         }
 
+        private void RefreshUserBets()
+        {
+            UserBets.Clear();
+
+            var bets = _bootstrapper.BetRepository.GetByUserId(UserId);
+
+            foreach (var bet in bets.OrderByDescending(b => b.PlacedAt ?? b.CreatedAt))
+            {
+                var leg = bet.Legs.FirstOrDefault();
+                if (leg is null) continue;
+
+                var ev = _bootstrapper.EventRepository.GetById(leg.EventId);
+                var eventName = ev?.Name ?? leg.EventId.ToString();
+
+                var combinedOdds = bet.GetCombinedOdds().Value;
+                var potential = bet.GetPotentialPayout().Amount;
+
+                UserBets.Add(new BetListItemViewModel
+                {
+                    BetSlipId = bet.Id,
+                    EventName = eventName,
+                    SelectionCode = leg.SelectionCode,
+                    Odds = combinedOdds,
+                    Stake = bet.Stake.Amount,
+                    PotentialPayout = potential,
+                    Status = bet.Status.ToString(),
+                    PlacedAt = bet.PlacedAt ?? bet.CreatedAt
+                });
+            }
+        }
+
         private void RefreshBalance()
         {
             var wallet = _bootstrapper.WalletRepository.GetOrCreate(UserId, UserName);
@@ -344,5 +324,3 @@ namespace BettingSimulator.UI.ViewModels
         }
     }
 }
-
-
