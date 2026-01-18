@@ -235,6 +235,11 @@ namespace BettingSimulator.UI.ViewModels
             if (SelectedEvent is null || SelectedMarket is null || SelectedSelection is null)
                 return false;
 
+            // blokada jeśli kurs poza zakresem (min 1.05, max 50) -> w UI powinno być "-"
+            var oddsVal = SelectedSelection.CurrentOdds.Value;
+            if (!BettingSimulator.Domain.Common.OddsLimits.IsWithinRange(oddsVal))
+                return false;
+
             if (string.IsNullOrWhiteSpace(StakeText))
                 return false;
 

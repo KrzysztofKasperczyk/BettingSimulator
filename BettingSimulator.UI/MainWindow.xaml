@@ -3,8 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Betting Simulator" Height="600" Width="900"
         xmlns:events="clr-namespace:BettingSimulator.Domain.Events;assembly=BettingSimulator.Domain"
-        xmlns:bets="clr-namespace:BettingSimulator.Domain.Bets;assembly=BettingSimulator.Domain">
-
+        xmlns:bets="clr-namespace:BettingSimulator.Domain.Bets;assembly=BettingSimulator.Domain"
+        xmlns:conv="clr-namespace:BettingSimulator.UI.Converters">
+    <Window.Resources>
+        <conv:OddsToDisplayConverter x:Key="OddsToDisplayConverter"/>
+    </Window.Resources>
     <Grid Margin="12">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
@@ -136,7 +139,14 @@
                         <GridView>
                             <GridViewColumn Header="Kod" DisplayMemberBinding="{Binding Code}" Width="70"/>
                             <GridViewColumn Header="Nazwa" DisplayMemberBinding="{Binding Name}" Width="240"/>
-                            <GridViewColumn Header="Kurs" DisplayMemberBinding="{Binding CurrentOdds}" Width="80"/>
+                            <GridViewColumn Header="Kurs" Width="80">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <!-- UWAGA: bindujemy do CurrentOdds.Value (decimal) -->
+                                        <TextBlock Text="{Binding CurrentOdds.Value, Converter={StaticResource OddsToDisplayConverter}}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
@@ -149,7 +159,13 @@
                         <GridView>
                             <GridViewColumn Header="Wydarzenie" DisplayMemberBinding="{Binding EventName}" Width="220"/>
                             <GridViewColumn Header="Typ" DisplayMemberBinding="{Binding SelectionCode}" Width="60"/>
-                            <GridViewColumn Header="Kurs" DisplayMemberBinding="{Binding Odds}" Width="60"/>
+                            <GridViewColumn Header="Kurs" Width="80">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding CurrentOdds, Converter={StaticResource OddsToDisplayConverter}}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                             <GridViewColumn Header="Stawka" DisplayMemberBinding="{Binding Stake}" Width="70"/>
                             <GridViewColumn Header="Potencjalna" DisplayMemberBinding="{Binding PotentialPayout}" Width="90"/>
                             <GridViewColumn Header="Status" Width="110">

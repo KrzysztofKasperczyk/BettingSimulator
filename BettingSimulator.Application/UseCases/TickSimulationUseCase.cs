@@ -30,6 +30,7 @@ namespace BettingSimulator.Application.UseCases
 
             foreach (var ev in events)
             {
+                ev.MarkSimTime(_clock.Now);
                 // Start eventu
                 if (ev.State == EventState.Scheduled && ev.StartTime <= _clock.Now)
                 {

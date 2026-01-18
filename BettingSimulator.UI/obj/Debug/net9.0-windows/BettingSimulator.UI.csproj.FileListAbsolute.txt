@@ -33,3 +33,4 @@ D:\GitHub\.NET\BettingSimulator\BettingSimulator.UI\obj\Debug\net9.0-windows\Bet
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.UI\obj\Debug\net9.0-windows\BettingSimulator.UI.genruntimeconfig.cache
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.UI\obj\Debug\net9.0-windows\ref\BettingSimulator.UI.dll
 D:\GitHub\.NET\BettingSimulator\BettingSimulator.UI\obj\Debug\net9.0-windows\BettingSimulator.UI.sourcelink.json
+D:\GitHub\.NET\BettingSimulator\BettingSimulator.UI\obj\Debug\net9.0-windows\GeneratedInternalTypeHelper.g.cs

@@ -50,6 +50,12 @@ namespace BettingSimulator.Application.UseCases
 
             var selection = market.GetSelectionByCode(request.SelectionCode);
 
+            // Twarda walidacja kursu: poza zakresem -> nie można obstawić
+            var oddsVal = selection.CurrentOdds.Value;
+            if (!BettingSimulator.Domain.Common.OddsLimits.IsWithinRange(oddsVal))
+                throw new DomainException("Nie można obstawić tej opcji (kurs poza zakresem).");
+
+
             // Zamrażamy kurs w momencie postawienia.
             var oddsAtPlacement = selection.CurrentOdds;
 

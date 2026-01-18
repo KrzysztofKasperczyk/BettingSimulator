@@ -7,22 +7,21 @@ using System.Threading.Tasks;
 
 namespace BettingSimulator.Domain.Markets
 {
-    public class Selection : Entity
+    public class Selection
     {
-        public string Code { get; }     // np. "HOME", "DRAW", "AWAY", "OVER", "UNDER"
-        public string Name { get; }     // np. "Home Win"
+        public string Code { get; }
+        public string Name { get; }
+
+        public Odds OpeningOdds { get; }      // NEW
         public Odds CurrentOdds { get; private set; }
 
-        public Selection(string code, string name, Odds initialOdds, Guid? id = null) : base(id)
+        public Selection(string code, string name, Odds openingOdds)
         {
-            if (string.IsNullOrWhiteSpace(code))
-                throw new DomainException("Selection code cannot be empty.");
-            if (string.IsNullOrWhiteSpace(name))
-                throw new DomainException("Selection name cannot be empty.");
+            Code = code;
+            Name = name;
 
-            Code = code.Trim().ToUpperInvariant();
-            Name = name.Trim();
-            CurrentOdds = initialOdds;
+            OpeningOdds = openingOdds;        // NEW
+            CurrentOdds = openingOdds;
         }
 
         public void UpdateOdds(Odds newOdds)

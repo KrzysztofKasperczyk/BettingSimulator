@@ -12,7 +12,6 @@ namespace BettingSimulator.Domain.Bets
     {
         public Guid EventId { get; }
         public Guid MarketId { get; }
-        public Guid SelectionId { get; }
 
         public string SelectionCode { get; }
         public string SelectionName { get; }
@@ -23,8 +22,7 @@ namespace BettingSimulator.Domain.Bets
         {
             EventId = eventId;
             MarketId = market.Id;
-            SelectionId = selection.Id;
-
+            
             SelectionCode = selection.Code;
             SelectionName = selection.Name;
 

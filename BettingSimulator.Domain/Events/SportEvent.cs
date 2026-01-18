@@ -21,6 +21,10 @@ namespace BettingSimulator.Domain.Events
         public DateTime? LiveStartedAt { get; private set; }
         public DateTime? FinishedAt { get; private set; }
 
+        public DateTime LastSimTime { get; private set; }
+        public void MarkSimTime(DateTime now) => LastSimTime = now;
+
+
         public IReadOnlyList<Market> Markets => _markets;
         private readonly List<Market> _markets = new();
 
@@ -34,6 +38,7 @@ namespace BettingSimulator.Domain.Events
             Name = name.Trim();
             StartTime = startTime;
             PlannedDuration = plannedDuration;
+            LastSimTime = startTime;
 
             State = EventState.Scheduled;
             Score = new Score(0, 0);
