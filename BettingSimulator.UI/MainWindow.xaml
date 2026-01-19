@@ -162,7 +162,7 @@
                             <GridViewColumn Header="Kurs" Width="80">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding CurrentOdds, Converter={StaticResource OddsToDisplayConverter}}"/>
+                                        <TextBlock Text="{Binding Odds, Converter={StaticResource OddsToDisplayConverter}}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
