@@ -2,29 +2,17 @@
 using BettingSimulator.Domain.Events;
 using BettingSimulator.Domain.Markets;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DomainOdds = BettingSimulator.Domain.Common.Odds;
 
 namespace BettingSimulator.Infrastructure.Odds
 {
     public sealed class LeadBasedOddsCalculator : IOddsCalculator
     {
-        // marża bukmacherska
         private const decimal Margin = 0.06m;
-
-        // jak silnie wpływa 1 punkt różnicy (bazowo)
-        private const double ScoreK = 0.55;
-
-        // jak mocno czas wzmacnia wpływ wyniku (koncówka)
-        private const double TimePower = 2.3;
-        private const double TimeBoostMax = 4.0;
-
-        // remis: bazowa część (z opening odds) + regulacja wynikiem i czasem
-        private const double DrawDiffPenalty = 0.60;  // im większa różnica, tym mniejszy remis
-        private const double DrawLateBoost = 0.70;    // w końcówce przy małej różnicy remis rośnie
+        private const double ScoreK = 0.35;
+        private const double TimeBoostMax = 2.5;
+        private const double TimePower = 1.8;
+        private const double DriftPerMinute = 0.007;
 
         public void RecalculateOdds(SportEvent sportEvent, Market market)
         {
@@ -35,159 +23,139 @@ namespace BettingSimulator.Infrastructure.Odds
             var drawSel = market.GetSelectionByCode("DRAW");
             var awaySel = market.GetSelectionByCode("AWAY");
 
-            // 1) Opening probabilities (STAŁE!)
+            // 1) Prawdopodobieństwa bazowe z kursów otwarcia
             var (p0Home, p0Draw, p0Away) = BaseFromOpeningOdds(homeSel, drawSel, awaySel);
 
-            // 2) Czas 0..1 (TickClock -> LastSimTime)
+            // 2) Czas symulacji
             var t = GetProgress01(sportEvent);
-
-            // 3) Wpływ czasu: na początku mały, pod koniec duży
             var timeBoost = 1.0 + (TimeBoostMax - 1.0) * Math.Pow(t, TimePower);
 
-            // 4) Wynik: diff > 0 = home prowadzi, diff < 0 = away prowadzi
+            // 3) Analiza wyniku i oporu faworyta
             var diff = sportEvent.Score.Home - sportEvent.Score.Away;
             var absDiff = Math.Abs(diff);
 
-            // 5) Najpierw wyliczamy "tilt" wyniku w przestrzeni logit (stabilne i monotoniczne)
-            // home prowadzi -> tilt dodatni -> rośnie P(home), maleje P(away)
-            var tilt = diff * ScoreK * timeBoost;
+            // Sprawdzamy, czy faworyt traci punkt
+            bool homeWasFavorite = p0Home > p0Away;
+            double resistance = 1.0;
 
-            // 6) Remis:
-            // start = p0Draw, spada z abs(diff), w końcówce rośnie gdy różnica mała
-            var pDraw = (double)p0Draw;
-            pDraw *= Math.Exp(-DrawDiffPenalty * absDiff);
+            // Jeśli faworyt przegrywa, osłabiamy wpływ wyniku (np. o 35%)
+            if ((homeWasFavorite && diff < 0) || (!homeWasFavorite && diff > 0))
+            {
+                resistance = 0.65;
+            }
 
-            var closeness = 1.0 / (1.0 + absDiff); // 1.0 dla 0, 0.5 dla 1, 0.33 dla 2...
-            pDraw *= 1.0 + DrawLateBoost * closeness * Math.Pow(t, TimePower);
+            var effectiveDiff = Math.Sign(diff) * Math.Sqrt(absDiff) * resistance;
 
-            // clamp, żeby remis nie znikł ani nie zdominował
-            pDraw = Clamp(pDraw, 0.03, 0.60);
+            // 4) Obliczenie szansy na Remis
+            var pDraw = (double)p0Draw * Math.Pow(0.55, absDiff);
 
-            // 7) Pozostałe prawdopodobieństwo dzielimy HOME/AWAY.
-            // Klucz: startowy "bias" z opening odds + tilt z wyniku.
+            if (absDiff <= 1)
+            {
+                var closenessBonus = (1.0 - absDiff * 0.5) * Math.Pow(t, 2.5);
+                pDraw += 0.18 * closenessBonus;
+            }
+            pDraw = Math.Clamp(pDraw, 0.02, 0.90);
+
+            // 5) Podział szans Home/Away
             var remaining = 1.0 - pDraw;
+            var baseLogit = Math.Log((double)p0Home / (double)p0Away);
+            var currentTilt = effectiveDiff * ScoreK * timeBoost;
 
-            // opening bias w logit: jeśli home faworyt, to dodatni
-            var baseBias = LogitShare((double)p0Home, (double)p0Away);
+            var homeShare = 1.0 / (1.0 + Math.Exp(-(baseLogit + currentTilt)));
 
-            // final logit = baseBias + tilt
-            var finalLogit = baseBias + tilt;
+            var pHome = remaining * homeShare;
+            var pAway = remaining * (1.0 - homeShare);
 
-            // udział home w puli (home+away), bez remisu
-            var homeShareNoDraw = Sigmoid(finalLogit);
-            var awayShareNoDraw = 1.0 - homeShareNoDraw;
+            // 6) Reguła hierarchii: Remis > Goniący
+            const double SafetyGap = 1.25;
 
-            var pHome = remaining * homeShareNoDraw;
-            var pAway = remaining * awayShareNoDraw;
+            if (diff > 0) // Home prowadzi, Away goni
+            {
+                double maxAwayProb = pDraw / SafetyGap;
+                if (pAway > maxAwayProb)
+                {
+                    double excess = pAway - maxAwayProb;
+                    pAway = maxAwayProb;
+                    pHome += excess;
+                }
+            }
+            else if (diff < 0) // Away prowadzi, Home goni
+            {
+                double maxHomeProb = pDraw / SafetyGap;
+                if (pHome > maxHomeProb)
+                {
+                    double excess = pHome - maxHomeProb;
+                    pHome = maxHomeProb;
+                    pAway += excess;
+                }
+            }
 
-            // 8) Normalizacja (sanity)
+            // 7) Drift czasowy
+            ApplySimulationDrift(sportEvent, ref pHome, ref pDraw, ref pAway, t);
+
+            // 8) Finalna normalizacja i marża
             var sum = pHome + pDraw + pAway;
             pHome /= sum; pDraw /= sum; pAway /= sum;
 
-            // --- REGUŁA PRODUKTOWA: gdy ktoś prowadzi, remis ma być WYRAŹNIE bardziej prawdopodobny niż wygrana przegrywającego ---
-            // czyli pDraw >= pTrailingWin * (1 + gapFactor)
-            const double gapFactor = 0.35;  // 0.35 = remis min. 35% bardziej prawdopodobny niż comeback przegrywającego
-            const double pMin = 0.01;       // minimalna masa na każde zdarzenie (żeby nie wyzerować)
-
-            if (diff > 0) // home prowadzi => przegrywa away
-            {
-                var target = Math.Min(0.60, pAway * (1.0 + gapFactor));
-                if (pDraw < target)
-                {
-                    var need = target - pDraw;
-
-                    // Zabieramy najpierw z prowadzącego (home), bo to najbardziej logiczne:
-                    // podnosząc draw, "karzemy" niepewność co do utrzymania prowadzenia.
-                    var takeFromHome = Math.Min(pHome - pMin, need);
-                    pHome -= takeFromHome;
-                    pDraw += takeFromHome;
-
-                    need = target - pDraw;
-                    if (need > 0)
-                    {
-                        // jeśli nadal brakuje, dobieramy z przegrywającego (away), ale zostawiamy minimum
-                        var takeFromAway = Math.Min(pAway - pMin, need);
-                        pAway -= takeFromAway;
-                        pDraw += takeFromAway;
-                    }
-                }
-            }
-            else if (diff < 0) // away prowadzi => przegrywa home
-            {
-                var target = Math.Min(0.60, pHome * (1.0 + gapFactor));
-                if (pDraw < target)
-                {
-                    var need = target - pDraw;
-
-                    var takeFromAway = Math.Min(pAway - pMin, need);
-                    pAway -= takeFromAway;
-                    pDraw += takeFromAway;
-
-                    need = target - pDraw;
-                    if (need > 0)
-                    {
-                        var takeFromHome = Math.Min(pHome - pMin, need);
-                        pHome -= takeFromHome;
-                        pDraw += takeFromHome;
-                    }
-                }
-            }
-
-            // ponowna normalizacja po regule
-            var sum2 = pHome + pDraw + pAway;
-            pHome /= sum2; pDraw /= sum2; pAway /= sum2;
-
-            // 9) Overround (marża)
-            var over = 1.0 + (double)Margin;
-
-            homeSel.UpdateOdds(ToOdds(pHome, over));
-            drawSel.UpdateOdds(ToOdds(pDraw, over));
-            awaySel.UpdateOdds(ToOdds(pAway, over));
+            var overround = 1.0 + (double)Margin;
+            homeSel.UpdateOdds(ToOdds(pHome, overround));
+            drawSel.UpdateOdds(ToOdds(pDraw, overround));
+            awaySel.UpdateOdds(ToOdds(pAway, overround));
         }
 
-        // --- Helpers ---
-
-        private static (decimal pHome, decimal pDraw, decimal pAway) BaseFromOpeningOdds(Selection home, Selection draw, Selection away)
+        private void ApplySimulationDrift(SportEvent ev, ref double ph, ref double pd, ref double pa, double t)
         {
-            var pH = 1m / home.OpeningOdds.Value;
-            var pD = 1m / draw.OpeningOdds.Value;
-            var pA = 1m / away.OpeningOdds.Value;
+            double tickStrength = (DriftPerMinute / 12.0) * (1.0 + t * 2.0);
+            var diff = ev.Score.Home - ev.Score.Away;
 
-            var sum = pH + pD + pA;
-            if (sum <= 0m) return (0.40m, 0.25m, 0.35m);
+            if (diff == 0)
+            {
+                Transfer(ref ph, ref pd, tickStrength * 0.5, 0.02);
+                Transfer(ref pa, ref pd, tickStrength * 0.5, 0.02);
+            }
+            else if (diff > 0)
+            {
+                Transfer(ref pa, ref ph, tickStrength * 0.75, 0.01);
+                Transfer(ref pd, ref ph, tickStrength * 0.25, 0.02);
+            }
+            else
+            {
+                Transfer(ref ph, ref pa, tickStrength * 0.75, 0.01);
+                Transfer(ref pd, ref pa, tickStrength * 0.25, 0.02);
+            }
+        }
 
-            pH /= sum; pD /= sum; pA /= sum;
-            return (pH, pD, pA);
+        private static (decimal pHome, decimal pDraw, decimal pAway) BaseFromOpeningOdds(Selection h, Selection d, Selection a)
+        {
+            var ph = 1m / Math.Max(h.OpeningOdds.Value, 1.01m);
+            var pd = 1m / Math.Max(d.OpeningOdds.Value, 1.01m);
+            var pa = 1m / Math.Max(a.OpeningOdds.Value, 1.01m);
+            var sum = ph + pd + pa;
+            return (ph / sum, pd / sum, pa / sum);
         }
 
         private static double GetProgress01(SportEvent ev)
         {
             if (ev.LiveStartedAt is null) return 0.0;
-
             var elapsed = (ev.LastSimTime - ev.LiveStartedAt.Value).TotalSeconds;
-            var total = Math.Max(1.0, ev.PlannedDuration.TotalSeconds);
-            return Clamp(elapsed / total, 0.0, 1.0);
+            var total = ev.PlannedDuration.TotalSeconds;
+            return Math.Clamp(elapsed / total, 0.0, 1.0);
         }
 
         private static DomainOdds ToOdds(double p, double over)
         {
-            p = Clamp(p, 0.01, 0.99);
-            var pWithMargin = Clamp(p * over, 0.01, 0.99);
-
-            var odds = 1.0 / pWithMargin;
-            return new DomainOdds((decimal)Math.Round(odds, 2, MidpointRounding.AwayFromZero));
+            var pWithMargin = Math.Clamp(p * over, 0.01, 0.99);
+            return new DomainOdds((decimal)Math.Round(1.0 / pWithMargin, 2, MidpointRounding.AwayFromZero));
         }
 
-        // logit udziału home vs away: ln(pHome/pAway)
-        private static double LogitShare(double pHome, double pAway)
+        private static double Transfer(ref double from, ref double to, double amount, double minFrom)
         {
-            pHome = Clamp(pHome, 0.001, 0.999);
-            pAway = Clamp(pAway, 0.001, 0.999);
-            return Math.Log(pHome / pAway);
+            var available = from - minFrom;
+            if (available <= 0) return 0;
+            var take = Math.Min(available, amount);
+            from -= take;
+            to += take;
+            return take;
         }
-
-        private static double Sigmoid(double x) => 1.0 / (1.0 + Math.Exp(-x));
-        private static double Clamp(double v, double min, double max) => v < min ? min : (v > max ? max : v);
     }
-
 }

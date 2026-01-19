@@ -16,7 +16,7 @@ namespace BettingSimulator.Domain.Common
             if (string.IsNullOrWhiteSpace(currency))
                 throw new DomainException("Currency cannot be empty.");
 
-            // Dla prostoty: nie pozwalamy na ujemne kwoty (saldo/kwoty zakładów).
+            // Brak ujemnych kwot
             if (amount < 0m)
                 throw new DomainException("Money amount cannot be negative.");
 

@@ -22,6 +22,9 @@ namespace BettingSimulator.Domain.Events
         public DateTime? FinishedAt { get; private set; }
 
         public DateTime LastSimTime { get; private set; }
+        public Score LastScore { get; private set; }
+        public void MarkScoreSnapshot() => LastScore = Score;
+
         public void MarkSimTime(DateTime now) => LastSimTime = now;
 
 
@@ -42,6 +45,8 @@ namespace BettingSimulator.Domain.Events
 
             State = EventState.Scheduled;
             Score = new Score(0, 0);
+            LastScore = Score;
+
         }
 
         public void StartAt(DateTime startedAt)

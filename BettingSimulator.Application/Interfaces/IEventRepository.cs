@@ -7,6 +7,7 @@ using BettingSimulator.Domain.Events;
 
 namespace BettingSimulator.Application.Interfaces
 {
+    ///Magazyn eventów
     public interface IEventRepository
     {
         SportEvent? GetById(Guid id);

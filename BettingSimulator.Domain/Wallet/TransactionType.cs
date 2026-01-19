@@ -8,10 +8,10 @@ namespace BettingSimulator.Domain.Wallet
 {
     public enum TransactionType
     {
-        Deposit,     // doładowanie
-        Stake,       // postawienie zakładu (obciążenie)
-        Payout,      // wypłata wygranej
-        Refund       // zwrot stawki (np. void/cancel)
+        Deposit,     
+        Stake,       
+        Payout,      
+        Refund       
     }
 
 }

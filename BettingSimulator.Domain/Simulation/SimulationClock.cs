@@ -24,9 +24,9 @@ namespace BettingSimulator.Domain.Simulation
             SpeedMultiplier = multiplier;
         }
 
-        /// <summary>
+        
         /// Przesuwa czas symulacji o delta * SpeedMultiplier.
-        /// </summary>
+        
         public void Tick(TimeSpan realDelta)
         {
             if (realDelta < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(realDelta));

@@ -15,6 +15,7 @@ namespace BettingSimulator.UI.ViewModels
     {
         private readonly DemoBootstrapper _bootstrapper;
         private readonly DispatcherTimer _timer;
+        private bool _tickInProgress;
 
         // Lista po lewej (VM-y tylko do listy, żeby kolory działały bez migania)
         public ObservableCollection<EventListItemViewModel> EventItems { get; } = new();
@@ -153,6 +154,11 @@ namespace BettingSimulator.UI.ViewModels
 
         private void OnTick()
         {
+            if (_tickInProgress)
+                return;
+
+            _tickInProgress = true;
+
             try
             {
                 // 1 tick = 5 sekund czasu symulacji
@@ -161,32 +167,36 @@ namespace BettingSimulator.UI.ViewModels
                 // logika symulacji
                 _bootstrapper.TickSimulationUseCase.Execute();
 
-                // ✅ odśwież statusy eventów na liście po lewej (bez migania)
+                // odśwież czas w UI
+                OnPropertyChanged(nameof(SimTimeText));
+
+                // odśwież statusy eventów na liście (bez migania)
                 foreach (var item in EventItems)
                     item.SyncFromDomain();
 
-                // settlement (MVP: może się wywołać wiele razy, ale jest bezpieczne)
-                if (SelectedEvent is not null &&
-                    SelectedEvent.State == EventState.Finished)
+                // odśwież prawy panel
+                OnPropertyChanged(nameof(SelectedEvent));
+
+                // odśwież kursy na liście (z zachowaniem wyboru)
+                RefreshSelectionsPreserveSelection();
+
+                // settlement
+                if (SelectedEvent is not null && SelectedEvent.State == BettingSimulator.Domain.Events.EventState.Finished)
                 {
                     _bootstrapper.SettleEventUseCase.Execute(SelectedEvent.Id);
                     RefreshBalance();
                     RefreshUserBets();
                 }
-
-                // czas w UI
-                OnPropertyChanged(nameof(SimTimeText));
-
-                // odśwież szczegóły po prawej (State/Score/itd.)
-                OnPropertyChanged(nameof(SelectedEvent));
-
-                // odśwież kursy w tabeli, ale zachowaj klikniętą selekcję
-                RefreshSelectionsPreserveSelection();
             }
             catch (Exception ex)
             {
-                _timer.Stop();
-                Message = $"Błąd symulacji: {ex.Message}";
+                // ❗ NIE zatrzymuj timera na stałe, bo "czas przestaje się ruszać"
+                Message = $"Błąd symulacji: {ex.GetType().Name}: {ex.Message}";
+                // jak chcesz debugować, możesz tu dodać breakpoint
+            }
+            finally
+            {
+                _tickInProgress = false;
             }
         }
 

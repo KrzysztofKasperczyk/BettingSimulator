@@ -13,10 +13,10 @@ namespace BettingSimulator.Application.Services
     {
         public bool IsWinningBet(BetSlip betSlip, SportEvent sportEvent)
         {
-            // MVP: single only
+            
             var leg = betSlip.Legs.Single();
 
-            // MVP: tylko rynek 1X2 po kodach HOME/DRAW/AWAY
+            
             var home = sportEvent.Score.Home;
             var away = sportEvent.Score.Away;
 

@@ -7,6 +7,7 @@ using BettingSimulator.Domain.Bets;
 
 namespace BettingSimulator.Application.Interfaces
 {
+    //Trwałe przechowywanie postawionych zakładów
     public interface IBetRepository
     {
         BetSlip? GetById(Guid id);
