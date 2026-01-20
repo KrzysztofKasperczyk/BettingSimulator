@@ -146,7 +146,8 @@ namespace BettingSimulator.UI.ViewModels
 
             _timer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(500)
+                // Zostawiamy 500ms tak jak chciałeś (bez deltatime)
+                Interval = TimeSpan.FromSeconds(1)
             };
             _timer.Tick += (_, _) => OnTick();
             _timer.Start();
@@ -162,7 +163,7 @@ namespace BettingSimulator.UI.ViewModels
             try
             {
                 // 1 tick = 5 sekund czasu symulacji
-                _bootstrapper.TickClock.Advance(TimeSpan.FromSeconds(5));
+                _bootstrapper.TickClock.Advance(TimeSpan.FromSeconds(10));
 
                 // logika symulacji
                 _bootstrapper.TickSimulationUseCase.Execute();
@@ -180,25 +181,49 @@ namespace BettingSimulator.UI.ViewModels
                 // odśwież kursy na liście (z zachowaniem wyboru)
                 RefreshSelectionsPreserveSelection();
 
-                // settlement
+                // settlement (rozliczanie)
                 if (SelectedEvent is not null && SelectedEvent.State == BettingSimulator.Domain.Events.EventState.Finished)
                 {
                     _bootstrapper.SettleEventUseCase.Execute(SelectedEvent.Id);
                     RefreshBalance();
                     RefreshUserBets();
                 }
+
+                // NOWE: Sprawdzamy czy trzeba dodać nowe mecze
+                EnsureUpcomingEvents();
             }
             catch (Exception ex)
             {
                 // ❗ NIE zatrzymuj timera na stałe, bo "czas przestaje się ruszać"
                 Message = $"Błąd symulacji: {ex.GetType().Name}: {ex.Message}";
-                // jak chcesz debugować, możesz tu dodać breakpoint
             }
             finally
             {
                 _tickInProgress = false;
             }
         }
+
+        // --- NOWA METODA: Generowanie zdarzeń ---
+        private void EnsureUpcomingEvents()
+        {
+            // Sprawdzamy, ile mamy meczów aktywnych (Scheduled lub Live)
+            var activeEventsCount = _bootstrapper.EventRepository.GetAll()
+                .Count(e => e.State != BettingSimulator.Domain.Events.EventState.Finished);
+
+            // Jeśli jest mniej niż 3, generujemy nowy
+            if (activeEventsCount < 3)
+            {
+                // Tworzymy nowy mecz losowy (wymaga zaktualizowanego DemoDataSeeder)
+                var newEvent = DemoDataSeeder.CreateRandomMatch(_bootstrapper.TickClock.Now);
+
+                // Dodajemy do repozytorium (backend)
+                _bootstrapper.EventRepository.Add(newEvent);
+
+                // Dodajemy do listy UI (frontend)
+                EventItems.Add(new EventListItemViewModel(newEvent));
+            }
+        }
+        // ----------------------------------------
 
         private void RefreshSelectionsPreserveSelection()
         {

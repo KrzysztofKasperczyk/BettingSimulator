@@ -49,8 +49,12 @@ namespace BettingSimulator.Infrastructure.Demo
 
         private void Seed()
         {
-            var demoEvent = DemoDataSeeder.CreateSingleDemoEvent(TickClock.Now);
-            EventRepository.Add(demoEvent);
+            // Generujemy 3 mecze na start
+            for (int i = 0; i < 3; i++)
+            {
+                var demoEvent = DemoDataSeeder.CreateRandomMatch(TickClock.Now);
+                EventRepository.Add(demoEvent);
+            }
         }
     }
 
