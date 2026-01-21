@@ -11,8 +11,8 @@ namespace BettingSimulator.Domain.Wallet
     {
         public DateTime Timestamp { get; }
         public TransactionType Type { get; }
-        public Money Amount { get; }          // kwota transakcji (zawsze dodatnia)
-        public string Description { get; }    // krótki opis (np. "BetSlip XYZ")
+        public Money Amount { get; }          
+        public string Description { get; }    
 
         public WalletTransaction(
             TransactionType type,

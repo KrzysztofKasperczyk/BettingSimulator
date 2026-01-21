@@ -53,7 +53,7 @@ namespace BettingSimulator.UI.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/BettingSimulator.UI;V1.0.0.0;component/views/eventdetailsview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/BettingSimulator.UI;component/views/eventdetailsview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\EventDetailsView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

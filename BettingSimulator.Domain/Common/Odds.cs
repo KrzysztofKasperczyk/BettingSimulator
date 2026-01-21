@@ -12,7 +12,7 @@ namespace BettingSimulator.Domain.Common
 
         public Odds(decimal value)
         {
-            // Minimalny sensowny kurs w bukmacherce > 1.0
+            
             if (value <= 1.0m)
                 throw new DomainException("Odds must be greater than 1.0.");
 
@@ -23,7 +23,7 @@ namespace BettingSimulator.Domain.Common
 
         public static Odds FromProbability(decimal probability)
         {
-            // probability in (0,1)
+            
             if (probability <= 0m || probability >= 1m)
                 throw new DomainException("Probability must be between 0 and 1 (exclusive).");
 

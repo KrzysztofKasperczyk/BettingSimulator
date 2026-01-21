@@ -34,11 +34,9 @@ namespace BettingSimulator.UI.ViewModels
 
         public void SyncFromDomain()
         {
-            // aktualizujemy to, co jest potrzebne do kolorów na liście
+            
             State = Event.State;
 
-            // jeśli kiedyś zmienisz Name (raczej nie), możesz też:
-            // OnPropertyChanged(nameof(Name));
         }
     }
 }

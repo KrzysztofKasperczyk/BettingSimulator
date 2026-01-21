@@ -17,7 +17,7 @@ namespace BettingSimulator.UI.ViewModels
         private readonly DispatcherTimer _timer;
         private bool _tickInProgress;
 
-        // Lista po lewej (VM-y tylko do listy, żeby kolory działały bez migania)
+        // Lista po lewej 
         public ObservableCollection<EventListItemViewModel> EventItems { get; } = new();
 
         private EventListItemViewModel? _selectedEventItem;
@@ -29,12 +29,11 @@ namespace BettingSimulator.UI.ViewModels
                 _selectedEventItem = value;
                 OnPropertyChanged();
 
-                // Napędza prawą stronę
+                // prawa strona
                 SelectedEvent = _selectedEventItem?.Event;
             }
         }
 
-        // Historia zakładów
         public ObservableCollection<BetListItemViewModel> UserBets { get; } = new();
 
         private SportEvent? _selectedEvent;
@@ -46,8 +45,7 @@ namespace BettingSimulator.UI.ViewModels
                 _selectedEvent = value;
                 OnPropertyChanged();
 
-                // Uwaga: tu nie zmieniamy SelectedMarket, jeśli już był ustawiony i nadal pasuje.
-                // Dzięki temu nie resetujemy użytkownikowi wyborów przy drobnych odświeżeniach.
+                
                 if (_selectedEvent is null)
                 {
                     SelectedMarket = null;
@@ -120,7 +118,7 @@ namespace BettingSimulator.UI.ViewModels
 
         public string SimTimeText => _bootstrapper.Clock.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-        // Demo user (na razie 1 użytkownik)
+        // demo uzytkownik
         public Guid UserId { get; } = Guid.Parse("11111111-1111-1111-1111-111111111111");
         public string UserName { get; } = "Demo User";
 
@@ -146,7 +144,6 @@ namespace BettingSimulator.UI.ViewModels
 
             _timer = new DispatcherTimer
             {
-                // Zostawiamy 500ms tak jak chciałeś (bez deltatime)
                 Interval = TimeSpan.FromSeconds(1)
             };
             _timer.Tick += (_, _) => OnTick();
@@ -162,26 +159,19 @@ namespace BettingSimulator.UI.ViewModels
 
             try
             {
-                // 1 tick = 5 sekund czasu symulacji
                 _bootstrapper.TickClock.Advance(TimeSpan.FromSeconds(10));
 
-                // logika symulacji
                 _bootstrapper.TickSimulationUseCase.Execute();
 
-                // odśwież czas w UI
                 OnPropertyChanged(nameof(SimTimeText));
 
-                // odśwież statusy eventów na liście (bez migania)
                 foreach (var item in EventItems)
                     item.SyncFromDomain();
 
-                // odśwież prawy panel
                 OnPropertyChanged(nameof(SelectedEvent));
 
-                // odśwież kursy na liście (z zachowaniem wyboru)
                 RefreshSelectionsPreserveSelection();
 
-                // settlement (rozliczanie)
                 if (SelectedEvent is not null && SelectedEvent.State == BettingSimulator.Domain.Events.EventState.Finished)
                 {
                     _bootstrapper.SettleEventUseCase.Execute(SelectedEvent.Id);
@@ -189,12 +179,10 @@ namespace BettingSimulator.UI.ViewModels
                     RefreshUserBets();
                 }
 
-                // NOWE: Sprawdzamy czy trzeba dodać nowe mecze
                 EnsureUpcomingEvents();
             }
             catch (Exception ex)
             {
-                // ❗ NIE zatrzymuj timera na stałe, bo "czas przestaje się ruszać"
                 Message = $"Błąd symulacji: {ex.GetType().Name}: {ex.Message}";
             }
             finally
@@ -203,27 +191,21 @@ namespace BettingSimulator.UI.ViewModels
             }
         }
 
-        // --- NOWA METODA: Generowanie zdarzeń ---
         private void EnsureUpcomingEvents()
         {
-            // Sprawdzamy, ile mamy meczów aktywnych (Scheduled lub Live)
+            // Sprawdzamy, ile mamy meczów aktywnych
             var activeEventsCount = _bootstrapper.EventRepository.GetAll()
                 .Count(e => e.State != BettingSimulator.Domain.Events.EventState.Finished);
 
-            // Jeśli jest mniej niż 3, generujemy nowy
             if (activeEventsCount < 3)
             {
-                // Tworzymy nowy mecz losowy (wymaga zaktualizowanego DemoDataSeeder)
                 var newEvent = DemoDataSeeder.CreateRandomMatch(_bootstrapper.TickClock.Now);
 
-                // Dodajemy do repozytorium (backend)
                 _bootstrapper.EventRepository.Add(newEvent);
 
-                // Dodajemy do listy UI (frontend)
                 EventItems.Add(new EventListItemViewModel(newEvent));
             }
         }
-        // ----------------------------------------
 
         private void RefreshSelectionsPreserveSelection()
         {
@@ -236,11 +218,9 @@ namespace BettingSimulator.UI.ViewModels
             foreach (var s in SelectedMarket.Selections)
                 Selections.Add(s);
 
-            // Przywróć wybór jeśli nadal istnieje
             if (!string.IsNullOrWhiteSpace(previouslySelectedCode))
                 SelectedSelection = Selections.FirstOrDefault(s => s.Code == previouslySelectedCode);
 
-            // Jeśli nie było poprzedniego wyboru albo zniknął – wybierz pierwszy
             SelectedSelection ??= Selections.FirstOrDefault();
         }
 
@@ -270,7 +250,6 @@ namespace BettingSimulator.UI.ViewModels
             if (SelectedEvent is null || SelectedMarket is null || SelectedSelection is null)
                 return false;
 
-            // blokada jeśli kurs poza zakresem (min 1.05, max 50) -> w UI powinno być "-"
             var oddsVal = SelectedSelection.CurrentOdds.Value;
             if (!BettingSimulator.Domain.Common.OddsLimits.IsWithinRange(oddsVal))
                 return false;
@@ -314,7 +293,7 @@ namespace BettingSimulator.UI.ViewModels
                 RefreshBalance();
 
                 Message =
-                    $"POSTAWIONO ✅  Kurs: {result.OddsAtPlacement:0.00} | " +
+                    $"POSTAWIONO  Kurs: {result.OddsAtPlacement:0.00} | " +
                     $"Potencjalna wygrana: {result.PotentialPayout:0.00} PLN | " +
                     $"Saldo: {result.NewBalance:0.00} PLN";
 

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BettingSimulator.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c714cdf91a2da6d2c4bea1cc1ddb7b836e047748")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+071dae9a94d4cd1b53e167e3a4b8b7de53882d81")]
 [assembly: System.Reflection.AssemblyProductAttribute("BettingSimulator.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BettingSimulator.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

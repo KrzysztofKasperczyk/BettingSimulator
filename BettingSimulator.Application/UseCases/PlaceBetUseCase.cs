@@ -50,25 +50,25 @@ namespace BettingSimulator.Application.UseCases
 
             var selection = market.GetSelectionByCode(request.SelectionCode);
 
-            // Twarda walidacja kursu: poza zakresem -> nie można obstawić
+            // jesli kurs poza zakresem to nie mozna obstawic
             var oddsVal = selection.CurrentOdds.Value;
             if (!BettingSimulator.Domain.Common.OddsLimits.IsWithinRange(oddsVal))
                 throw new DomainException("Nie można obstawić tej opcji (kurs poza zakresem).");
 
 
-            // Zamrażamy kurs w momencie postawienia.
+            // zamroz kurs w momencie obstawienia
             var oddsAtPlacement = selection.CurrentOdds;
 
-            // Wallet
+            
             var wallet = _walletRepository.GetOrCreate(request.UserId, request.UserName);
 
             var stake = new Money(request.StakeAmount, request.Currency);
 
-            // Obciążamy portfel (waliduje saldo)
+            // pobieranie z portfela
             wallet.Stake(stake, _clock.Now, $"Stake for event '{ev.Name}' ({market.Name} - {selection.Code})");
             _walletRepository.Update(wallet);
 
-            // Tworzymy kupon (single)
+            // tworzenie kuponu
             var betSlip = new BetSlip(request.UserId, _clock.Now);
             betSlip.SetStake(stake);
 

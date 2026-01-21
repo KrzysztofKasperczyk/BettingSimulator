@@ -24,7 +24,7 @@ namespace BettingSimulator.Domain.Wallet
 
         public Money GetBalance(string currency = "PLN")
         {
-            // Saldo liczymy z transakcji (audit-friendly).
+            // Saldo liczymy z transakcji
             decimal sum = 0m;
 
             foreach (var t in _transactions)
@@ -42,7 +42,7 @@ namespace BettingSimulator.Domain.Wallet
                 };
             }
 
-            // Money nie pozwala na ujemne, ale saldo nie powinno być ujemne przez nasze walidacje.
+            // Money nie pozwala na ujemne
             return new Money(sum < 0m ? 0m : sum, currency);
         }
 

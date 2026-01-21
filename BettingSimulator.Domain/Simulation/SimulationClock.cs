@@ -25,7 +25,7 @@ namespace BettingSimulator.Domain.Simulation
         }
 
         
-        /// Przesuwa czas symulacji o delta * SpeedMultiplier.
+        
         
         public void Tick(TimeSpan realDelta)
         {

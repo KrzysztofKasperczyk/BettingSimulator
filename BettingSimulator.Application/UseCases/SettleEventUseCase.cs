@@ -39,7 +39,7 @@ namespace BettingSimulator.Application.UseCases
             if (ev.State != Domain.Events.EventState.Finished)
                 throw new DomainException("Event must be finished to settle bets.");
 
-            // Rozliczamy tylko bety Placed, które mają nogę na ten event
+            // rozlicz bety o stanie ,,Placed'' ktore maja ten event w legs
             var bets = _betRepository.GetAll()
                 .Where(b => b.Status == BetStatus.Placed)
                 .Where(b => b.Legs.Any(l => l.EventId == eventId))
@@ -55,7 +55,7 @@ namespace BettingSimulator.Application.UseCases
                 {
                     bet.SettleWon(_clock.Now);
 
-                    var payout = bet.GetPotentialPayout(); // Stake * odds
+                    var payout = bet.GetPotentialPayout();
                     wallet.Payout(payout, _clock.Now, $"Payout for bet {bet.Id}");
                 }
                 else

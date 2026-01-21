@@ -10,7 +10,7 @@ namespace BettingSimulator.Application.Interfaces
 {
     public interface ISettlementService
     {
-        /// Rozlicza kupon na podstawie końcowego wyniku wydarzenia.
+        // Rozlicza kupon na podstawie końcowego wyniku wydarzenia.
         bool IsWinningBet(BetSlip betSlip, SportEvent sportEvent);
     }
 

@@ -12,7 +12,7 @@ namespace BettingSimulator.Application.Interfaces
     {
         Wallet? GetByUserId(Guid userId);
 
-        /// Tworzy portfel, jeśli nie istnieje
+        
         Wallet GetOrCreate(Guid userId, string ownerName);
 
         void Update(Wallet wallet);

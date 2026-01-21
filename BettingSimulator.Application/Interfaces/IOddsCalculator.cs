@@ -10,7 +10,6 @@ namespace BettingSimulator.Application.Interfaces
 {
     public interface IOddsCalculator
     {
-        /// Aktualizuje kursy dla rynku 
         void RecalculateOdds(SportEvent sportEvent, Market market);
     }
 

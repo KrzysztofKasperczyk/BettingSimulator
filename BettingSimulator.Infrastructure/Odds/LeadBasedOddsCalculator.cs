@@ -38,7 +38,7 @@ namespace BettingSimulator.Infrastructure.Odds
             bool homeWasFavorite = p0Home > p0Away;
             double resistance = 1.0;
 
-            // Jeśli faworyt przegrywa, osłabiamy wpływ wyniku (np. o 35%)
+            // Jeśli faworyt przegrywa, osłabiamy wpływ wyniku
             if ((homeWasFavorite && diff < 0) || (!homeWasFavorite && diff > 0))
             {
                 resistance = 0.65;
@@ -66,7 +66,7 @@ namespace BettingSimulator.Infrastructure.Odds
             var pHome = remaining * homeShare;
             var pAway = remaining * (1.0 - homeShare);
 
-            // 6) Reguła hierarchii: Remis > Goniący
+            // 6) Remis > Goniący
             const double SafetyGap = 1.25;
 
             if (diff > 0) // Home prowadzi, Away goni
@@ -93,7 +93,7 @@ namespace BettingSimulator.Infrastructure.Odds
             // 7) Drift czasowy
             ApplySimulationDrift(sportEvent, ref pHome, ref pDraw, ref pAway, t);
 
-            // 8) Finalna normalizacja i marża
+            
             var sum = pHome + pDraw + pAway;
             pHome /= sum; pDraw /= sum; pAway /= sum;
 

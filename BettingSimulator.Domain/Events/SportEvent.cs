@@ -12,8 +12,8 @@ namespace BettingSimulator.Domain.Events
     {
         public string Name { get; }
         public DateTime StartTime { get; }
-        public TimeSpan PlannedDuration { get; }              // NOWE
-        public DateTime PlannedEndTime => StartTime + PlannedDuration;  // NOWE
+        public TimeSpan PlannedDuration { get; }              
+        public DateTime PlannedEndTime => StartTime + PlannedDuration;  
 
         public EventState State { get; private set; }
         public Score Score { get; private set; }

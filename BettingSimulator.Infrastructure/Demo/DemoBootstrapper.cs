@@ -23,7 +23,7 @@ namespace BettingSimulator.Infrastructure.Demo
 
         public PlaceBetUseCase PlaceBetUseCase { get; }
         public TickSimulationUseCase TickSimulationUseCase { get; }
-        public SettleEventUseCase SettleEventUseCase { get; } // NEW
+        public SettleEventUseCase SettleEventUseCase { get; } 
 
         public DemoBootstrapper()
         {
@@ -49,7 +49,7 @@ namespace BettingSimulator.Infrastructure.Demo
 
         private void Seed()
         {
-            // Generujemy 3 mecze na start
+            //3 mecze na start
             for (int i = 0; i < 3; i++)
             {
                 var demoEvent = DemoDataSeeder.CreateRandomMatch(TickClock.Now);

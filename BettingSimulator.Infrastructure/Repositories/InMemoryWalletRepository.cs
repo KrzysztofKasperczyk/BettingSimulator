@@ -20,7 +20,7 @@ namespace BettingSimulator.Infrastructure.Repositories
             if (_wallets.TryGetValue(userId, out var existing))
                 return existing;
 
-            var wallet = new Wallet(ownerName, id: userId); // ID portfela = UserId (uprości)
+            var wallet = new Wallet(ownerName, id: userId);
             _wallets[userId] = wallet;
             return wallet;
         }

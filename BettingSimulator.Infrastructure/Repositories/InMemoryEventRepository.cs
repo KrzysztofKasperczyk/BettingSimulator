@@ -25,7 +25,7 @@ namespace BettingSimulator.Infrastructure.Repositories
 
         public void Update(SportEvent sportEvent)
         {
-            // In-memory: obiekt i tak jest referencją, ale trzymamy spójny kontrakt.
+            
             _events[sportEvent.Id] = sportEvent;
         }
     }

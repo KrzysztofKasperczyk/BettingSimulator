@@ -12,7 +12,7 @@ namespace BettingSimulator.Domain.Markets
         public string Code { get; }
         public string Name { get; }
 
-        public Odds OpeningOdds { get; }      // NEW
+        public Odds OpeningOdds { get; }      
         public Odds CurrentOdds { get; private set; }
 
         public Selection(string code, string name, Odds openingOdds)
@@ -20,7 +20,7 @@ namespace BettingSimulator.Domain.Markets
             Code = code;
             Name = name;
 
-            OpeningOdds = openingOdds;        // NEW
+            OpeningOdds = openingOdds;       
             CurrentOdds = openingOdds;
         }
 

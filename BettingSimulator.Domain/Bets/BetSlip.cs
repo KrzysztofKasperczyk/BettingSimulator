@@ -10,7 +10,7 @@ namespace BettingSimulator.Domain.Bets
     public class BetSlip : Entity
     {
         public Guid UserId { get; }
-        public Money Stake { get; private set; }              // stawka
+        public Money Stake { get; private set; }              
         public BetStatus Status { get; private set; }
         public DateTime CreatedAt { get; }
         public DateTime? PlacedAt { get; private set; }

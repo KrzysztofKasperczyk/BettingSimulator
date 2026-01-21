@@ -18,12 +18,12 @@ namespace BettingSimulator.Application.Services
             _calculator = calculator;
         }
 
-        //Przejście przez wszystkie rynki danego meczu i nakazanie ich przeliczenia
+        //przechodzi przez wszystkie ryynki i przelicza kursy
         public void RecalculateForEvent(SportEvent sportEvent)
         {
             foreach (var market in sportEvent.Markets)
             {
-                // Zabezpieczenie
+                
                 if (market.State == MarketState.Settled || market.State == MarketState.Closed)
                     continue;
 

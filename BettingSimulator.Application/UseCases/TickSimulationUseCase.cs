@@ -15,7 +15,7 @@ namespace BettingSimulator.Application.UseCases
         private readonly OddsService _oddsService;
         private readonly Random _random;
 
-        // Seed dla deterministycznej symulacji
+        // Seed dla symulacji
         private const int SimulationSeed = 12345;
 
         public TickSimulationUseCase(
@@ -35,10 +35,10 @@ namespace BettingSimulator.Application.UseCases
 
             foreach (var ev in events)
             {
-                // Aktualny czas symulacji
+                
                 ev.MarkSimTime(_clock.Now);
 
-                // --- START EVENTU ---
+                // start eventu
                 if (ev.State == EventState.Scheduled && ev.StartTime <= _clock.Now)
                 {
                     ev.StartAt(_clock.Now);
@@ -54,7 +54,7 @@ namespace BettingSimulator.Application.UseCases
                 if (ev.LiveStartedAt is null)
                     throw new DomainException("Live event must have LiveStartedAt.");
 
-                // --- KONIEC EVENTU ---
+                // koniec eventu
                 if (_clock.Now - ev.LiveStartedAt.Value >= ev.PlannedDuration)
                 {
                     ev.FinishAt(_clock.Now);
@@ -63,18 +63,18 @@ namespace BettingSimulator.Application.UseCases
                     continue;
                 }
 
-                // --- SYMULACJA WYNIKU OPARTA NA KURSACH ---
+                
 
-                // Pobieramy rynek 1X2, aby określić siłę drużyn na podstawie kursów otwarcia
+             
                 var market1X2 = ev.Markets.FirstOrDefault(m => m.Type == MarketType.ThreeWay_1X2);
 
-                double homeStrength = 0.5; // Domyślnie 50/50 jeśli brak rynku
+                double homeStrength = 0.5; // jesli brak rynku to 50/50
                 if (market1X2 != null)
                 {
                     double hOdds = (double)market1X2.GetSelectionByCode("HOME").OpeningOdds.Value;
                     double aOdds = (double)market1X2.GetSelectionByCode("AWAY").OpeningOdds.Value;
 
-                    // Obliczamy prawdopodobieństwo implikowane (bez remisu i marży)
+                    
                     double pHone = 1.0 / hOdds;
                     double pAway = 1.0 / aOdds;
                     homeStrength = pHone / (pHone + pAway);
@@ -94,7 +94,7 @@ namespace BettingSimulator.Application.UseCases
                         market.Suspend();
                 }
 
-                // Aktualizacja kursów (zawsze - dla płynnego driftu)
+                
                 _oddsService.RecalculateForEvent(ev);
 
                 if (scoreChanged)
@@ -109,21 +109,16 @@ namespace BettingSimulator.Application.UseCases
             }
         }
 
-        /// <summary>
-        /// Symuluje punkt w ticku, biorąc pod uwagę względną siłę faworyta.
-        /// </summary>
-        /// <param name="homeStrength">Wartość 0-1 określająca szansę, że to gospodarz strzeli, jeśli padnie gol.</param>
+        
         private Score SimulateScoreTick(Score score, double homeStrength)
         {
             var r = _random.NextDouble();
 
-            // Bazowa szansa na jakiegokolwiek gola w ticku (np. 3%)
-            // 0.03 przy ticku 1-minutowym daje średnio 2.7 gola na mecz.
             const double chanceOfAnyGoal = 0.03;
 
             if (r < chanceOfAnyGoal)
             {
-                // Drugi los decyduje, która drużyna strzeliła (proporcjonalnie do siły)
+                
                 var sideRandom = _random.NextDouble();
 
                 if (sideRandom < homeStrength)

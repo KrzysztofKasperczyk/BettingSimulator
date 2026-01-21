@@ -10,7 +10,7 @@ namespace BettingSimulator.Infrastructure.Demo
     {
         private static readonly Random _random = new Random();
 
-        // Baza nazw do losowania
+       
         private static readonly List<string> _teamNames = new()
         {
             "Real Madrid", "FC Barcelona", "Manchester City", "Liverpool",
@@ -21,7 +21,7 @@ namespace BettingSimulator.Infrastructure.Demo
 
         public static SportEvent CreateRandomMatch(DateTime now)
         {
-            // 1. Losujemy dwie różne drużyny
+            // losuj druzyny
             string teamA = _teamNames[_random.Next(_teamNames.Count)];
             string teamB;
             do
@@ -29,18 +29,17 @@ namespace BettingSimulator.Infrastructure.Demo
                 teamB = _teamNames[_random.Next(_teamNames.Count)];
             } while (teamA == teamB);
 
-            // 2. Losujemy start meczu (od teraz do 3 minut w przyszłość)
-            // Dzięki temu mecze nie zaczynają się wszystkie naraz
+            // losowanie za ile zacznie sie mecz
             var delaySeconds = _random.Next(10, 180);
             var startTime = now.AddSeconds(delaySeconds);
 
             var ev = new SportEvent(
                 name: $"{teamA} vs {teamB}",
                 startTime: startTime,
-                plannedDuration: TimeSpan.FromMinutes(10) // Symulowane 90 min
+                plannedDuration: TimeSpan.FromMinutes(10) //10 minut w symulacji
             );
 
-            // 3. Generujemy losowe kursy (logika z poprzedniej rozmowy)
+            // losowe kursy
             AddRandomOdds(ev);
 
             return ev;
@@ -52,7 +51,7 @@ namespace BettingSimulator.Infrastructure.Demo
             homeOddsVal = Math.Round(homeOddsVal, 2);
 
             double pHome = 1.0 / homeOddsVal;
-            double totalP = 1.06; // marża
+            double totalP = 1.06;
             double remainingP = Math.Max(0.10, totalP - pHome);
 
             double pDraw, pAway;
